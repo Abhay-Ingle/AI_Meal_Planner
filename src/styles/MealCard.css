@@ -1,0 +1,91 @@
+.meal-card {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.meal-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+.meal-card-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.meal-icon {
+  flex-shrink: 0;
+}
+
+.meal-card-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.meal-card-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  flex: 1;
+}
+
+.meal-item {
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.meal-item:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.meal-type {
+  color: #667eea;
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.meal-description {
+  color: #4b5563;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 768px) {
+  .meal-card {
+    border-radius: 12px;
+  }
+
+  .meal-card-header {
+    padding: 1.25rem;
+  }
+
+  .meal-card-header h3 {
+    font-size: 1.25rem;
+  }
+
+  .meal-card-body {
+    padding: 1.25rem;
+    gap: 1.25rem;
+  }
+
+  .meal-item {
+    padding-bottom: 1.25rem;
+  }
+}
