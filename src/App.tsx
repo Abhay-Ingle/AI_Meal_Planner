@@ -62,21 +62,19 @@ Do not include any extra text or markdown. Only valid JSON.`;
     try {
       const prompt = generatePrompt(formData);
 
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: "gpt-4o-mini",
-          messages: [
-            { role: "system", content: "You are a professional nutritionist. Provide meal plans in valid JSON only." },
-            { role: "user", content: prompt },
-          ],
-          temperature: 0.7,
-        }),
-      });
+    const response = await fetch("/api/generate", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    model: "gpt-4o-mini",
+    messages: [
+      { role: "system", content: "You are a professional nutritionist. Provide meal plans in valid JSON only." },
+      { role: "user", content: prompt },
+    ],
+    temperature: 0.7,
+  }),
+});
+
 
       if (!response.ok) {
         throw new Error(`OpenAI API error: ${response.statusText}`);
