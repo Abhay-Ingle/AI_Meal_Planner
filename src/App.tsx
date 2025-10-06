@@ -195,60 +195,58 @@ setMealPlan(parsedPlan);
     y += 15;
 
     // Loop through days
-    Object.entries(mealPlan).forEach(([day, dayMeals]) => {
+   Object.entries(mealPlan).forEach(([day, dayMeals]) => {
+  doc.setFont("times", "bold");
+  doc.setFontSize(14);
+  doc.text(`DAY ${day}`, margin, y);
+  y += lineHeight + 2;
+
+  Object.values(dayMeals)
+    .filter(meal => meal.name !== "Meal not provided") // skip empty meals
+    .forEach(meal => {
+      // Meal name
       doc.setFont("times", "bold");
-      doc.setFontSize(14);
-      doc.text(`DAY ${day}`, margin, y);
-      y += lineHeight + 2;
+      doc.setFontSize(12);
+      doc.text(meal.name, margin + 5, y);
+      y += lineHeight;
 
-      Object.values(dayMeals).forEach(meal => {
-        // Meal name
-        doc.setFont("times", "bold");
-        doc.setFontSize(12);
-        doc.text(meal.name, margin + 5, y);
+      // Ingredients
+      doc.setFont("times", "normal");
+      doc.setFontSize(11);
+      const ingredientsText = `Ingredients: ${meal.ingredients.join(", ")}`;
+      const splitIngredients = doc.splitTextToSize(ingredientsText, pageWidth - 2 * margin - 5);
+      splitIngredients.forEach(line => {
+        doc.text(line, margin + 10, y);
         y += lineHeight;
+      });
 
-        // Ingredients
-        doc.setFont("times", "normal");
-        doc.setFontSize(11);
-        const ingredientsText = `Ingredients: ${meal.ingredients.join(", ")}`;
-        const splitIngredients = doc.splitTextToSize(ingredientsText, pageWidth - 2 * margin - 5);
-        splitIngredients.forEach(line => {
+      // Calories
+      doc.text(`Calories: ${meal.calories ?? 0}`, margin + 10, y);
+      y += lineHeight;
+
+      // Preparation
+      if (meal.preparation) {
+        doc.setFont("times", "italic");
+        const prepText = `Preparation: ${meal.preparation}`;
+        const splitPrep = doc.splitTextToSize(prepText, pageWidth - 2 * margin - 5);
+        splitPrep.forEach(line => {
           doc.text(line, margin + 10, y);
           y += lineHeight;
         });
+        doc.setFont("times", "normal");
+      }
 
-        // Calories
-       // Current
+      y += 5;
 
-// Update
-doc.text(`Calories: ${meal.calories ?? 0}`, margin + 10, y);
-
-        y += lineHeight;
-
-        // Preparation
-        if (meal.preparation) {
-          doc.setFont("times", "italic");
-          const prepText = `Preparation: ${meal.preparation}`;
-          const splitPrep = doc.splitTextToSize(prepText, pageWidth - 2 * margin - 5);
-          splitPrep.forEach(line => {
-            doc.text(line, margin + 10, y);
-            y += lineHeight;
-          });
-          doc.setFont("times", "normal");
-        }
-
-        y += 5;
-
-        // New page if needed
-        if (y > pageHeight - 25) {
-          doc.addPage();
-          y = 20;
-        }
-      });
-
-      y += 10;
+      if (y > pageHeight - 25) {
+        doc.addPage();
+        y = 20;
+      }
     });
+
+  y += 10;
+});
+
 
     // Footer
     y = pageHeight - 15;
