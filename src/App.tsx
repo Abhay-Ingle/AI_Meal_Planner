@@ -106,7 +106,7 @@ const snackCalories = totalCalories - (breakfastCalories + lunchCalories + dinne
     try {
       const prompt = generatePrompt(formData);
 
-   const response = await fetch("http://localhost:3000/api/generate", {
+   const response = await fetch("api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
