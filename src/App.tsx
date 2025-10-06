@@ -8,7 +8,7 @@ import "./styles/App.css";
 interface Meal {
   name: string;
   ingredients: string[];
-  calories: number;
+  calorieGoal: number;
   preparation: string;
 }
 
@@ -26,32 +26,76 @@ function App() {
   const [error, setError] = useState<string | null>(null);
 
   // Generate structured JSON prompt for OpenAI
-  const generatePrompt = (formData: FormData): string => {
-    const mealNames = ["breakfast", "lunch", "dinner", "snack 1", "snack 2", "snack 3"];
-    const mealsToGenerate = mealNames.slice(0, parseInt(formData.mealsPerDay));
+  // 📌 Replace your existing generatePrompt with this
+const generatePrompt = (formData: FormData): string => {
 
-    return `Create a ${formData.numberOfDays}-day meal plan with the following requirements:
-- Age: ${formData.age}
-- Gender: ${formData.gender}
-- Diet type: ${formData.dietType}
-- Daily calorie goal: ${formData.calorieGoal} calories
-- Meals per day: ${formData.mealsPerDay}
-${formData.allergies ? `- Allergies/Dislikes: ${formData.allergies}` : ""}
+const totalCalories = Number(formData.calorieGoal);
+const breakfastCalories = Math.floor(totalCalories * 0.25);
+const lunchCalories = Math.floor(totalCalories * 0.35);
+const dinnerCalories = Math.floor(totalCalories * 0.25);
+const snackCalories = totalCalories - (breakfastCalories + lunchCalories + dinnerCalories);
 
-For each day, provide ${formData.mealsPerDay} meals: ${mealsToGenerate.join(", ")}.
+  
+  return `
+  You are an expert nutritionist and weight management coach with over 15 years of experience.
 
-**Important:** Format your response as JSON with this structure:
-{
-  "1": {
-    "meal1": { "name": "Dish name", "ingredients": ["list"], "calories": 250, "preparation": "note" },
-    "meal2": { ... }
-  },
-  "2": { ... }
-}
+  Your task is to create a highly personalized ${formData.goal === "weight_loss" ? "weight loss" : "weight gain"} diet plan for:
+  - Gender: ${formData.gender}
+  - Age: ${formData.age}
+  - Height: ${formData.height} cm
+  - Weight: ${formData.weight} kg
+  - City: Tier 3 / 4 city in Maharashtra
+  - Diet Preference: ${formData.dietType} 
+  - Number of meals: 4 meals per day
+  - Economic status: Low income — meals should be affordable, simple, realistic and use **locally available Maharashtrian foods**. Avoid fancy or expensive ingredients.
+    Distribute total daily calories roughly as:
+- Breakfast: 25%
+- Lunch: 35%
+- Dinner: 25%
+- Snack: 15%
+  ⚠️ Important:
+   ⚠️ Important:
+1. Distribute calories as: 
+   - Breakfast: ${breakfastCalories} kcal
+   - Lunch: ${lunchCalories} kcal
+   - Dinner: ${dinnerCalories} kcal
+   - Snack: ${snackCalories} kcal
+2. Each meal's calories must **not exceed the assigned amount**, and the **total daily calories must not exceed ${formData.calorieGoal} kcal**.
 
-Each meal must include: name, ingredients (array), calories (integer), optional preparation note.
-Do not include any extra text or markdown. Only valid JSON.`;
-  };
+  - The diet plan should include only **Maharashtrian food choices** and use easy-to-follow language.
+  - Give a **4-meal plan per day** (Breakfast, Lunch, Snack, Dinner).
+  - Include **total daily calories** and **macronutrients** (protein, carbohydrates, fats).
+  - Format the output as **valid JSON only** (no markdown). 
+ 
+
+  JSON structure example:
+  {
+    "1": {
+      "breakfast": {
+        "name": "Poha with peanuts",
+        "ingredients": ["poha", "peanuts", "onion", "oil"],
+        "calories": 350,
+        "protein": 10,
+        "carbs": 45,
+        "fats": 12,
+        "preparation": "Cook poha with peanuts and onions."
+      },
+      "lunch": {...},
+      "snack": {...},
+      "dinner": {...},
+      "total_nutrients": {
+        "calories": 1800,
+        "protein": 65,
+        "carbs": 230,
+        "fats": 55
+      }
+    },
+    "2": { ... }
+  }
+
+  Generate for ${formData.numberOfDays} days.
+  `;
+};
 
   // Handle form submission
   const handleFormSubmit = async (formData: FormData) => {
@@ -62,18 +106,22 @@ Do not include any extra text or markdown. Only valid JSON.`;
     try {
       const prompt = generatePrompt(formData);
 
-    const response = await fetch("/api/generate", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    model: "gpt-4o-mini",
-    messages: [
-      { role: "system", content: "You are a professional nutritionist. Provide meal plans in valid JSON only." },
-      { role: "user", content: prompt },
-    ],
-    temperature: 0.7,
-  }),
-});
+   const response = await fetch("http://localhost:3000/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: "You are a professional nutritionist. Provide meal plans in valid JSON only."
+          },
+          { role: "user", content: prompt }
+        ],
+        temperature: 0.7
+      }),
+    });
+
 
 
       if (!response.ok) {
@@ -87,21 +135,29 @@ Do not include any extra text or markdown. Only valid JSON.`;
       const cleanContent = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
       const parsedPlan: MealPlan = JSON.parse(cleanContent);
 
-      // Fill missing meals to avoid blank cards
-      Object.values(parsedPlan).forEach(day => {
-        Object.keys(day).forEach(mealKey => {
-          if (!day[mealKey]) {
-            day[mealKey] = {
-              name: "Meal not provided",
-              ingredients: [],
-              calories: 0,
-              preparation: "",
-            };
-          }
-        });
-      });
+// Ensure all meals have required fields to prevent errors
+Object.values(parsedPlan).forEach(day => {
+  Object.keys(day).forEach(mealKey => {
+    const meal = day[mealKey];
+    if (!meal || typeof meal !== "object") {
+      day[mealKey] = { 
+        name: "Meal not provided", 
+        ingredients: [], 
+        calories: 0, 
+        preparation: "" 
+      };
+    } else {
+      if (!meal.name) meal.name = "Meal not provided";
+      if (!meal.ingredients) meal.ingredients = [];
+      if (!meal.calories && meal.calories !== 0) meal.calories = 0;
+      if (!meal.preparation) meal.preparation = "";
+    }
+  });
+});
 
-      setMealPlan(parsedPlan);
+
+setMealPlan(parsedPlan);
+
     } catch (err) {
       console.error(err);
       setError(err instanceof Error ? err.message : "Error generating meal plan");
@@ -111,10 +167,14 @@ Do not include any extra text or markdown. Only valid JSON.`;
   };
 
   // Format meal description for display or PDF
-  const formatMealDescription = (meal: Meal) => {
-    if (!meal) return "No meal data";
-    return `${meal.name}\nIngredients: ${meal.ingredients.join(", ")}\nCalories: ${meal.calories}\n${meal.preparation || ""}`;
-  };
+ const formatMealDescription = (meal: Meal) => {
+  if (!meal) return "No meal data";
+
+  const ingredients = Array.isArray(meal.ingredients) ? meal.ingredients.join(", ") : "No ingredients listed";
+
+  return `${meal.name || "No name"}\nIngredients: ${ingredients}\nCalories: ${meal.calories ?? 0}\n${meal.preparation || ""}`;
+};
+
 
   // Download PDF
   const downloadPDF = () => {
@@ -159,7 +219,11 @@ Do not include any extra text or markdown. Only valid JSON.`;
         });
 
         // Calories
-        doc.text(`Calories: ${meal.calories}`, margin + 10, y);
+       // Current
+
+// Update
+doc.text(`Calories: ${meal.calories ?? 0}`, margin + 10, y);
+
         y += lineHeight;
 
         // Preparation

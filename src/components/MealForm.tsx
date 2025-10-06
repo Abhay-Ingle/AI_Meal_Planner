@@ -11,9 +11,12 @@ export interface FormData {
   gender: string;
   dietType: string;
   allergies: string;
-  calorieGoal: string;
+  calorieGoal: string; // ✅ should be string (input returns string)
   mealsPerDay: string;
   numberOfDays: string;
+  goal: string;
+  height: string;
+  weight: string;
 }
 
 const MealForm: React.FC<MealFormProps> = ({ onSubmit, isLoading }) => {
@@ -23,11 +26,16 @@ const MealForm: React.FC<MealFormProps> = ({ onSubmit, isLoading }) => {
     dietType: '',
     allergies: '',
     calorieGoal: '',
-    mealsPerDay: '3',
+    mealsPerDay: '4', // default to 4 meals as per your AI prompt
     numberOfDays: '7',
+    goal: 'weight_loss',
+    height: '',
+    weight: '',
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -42,6 +50,7 @@ const MealForm: React.FC<MealFormProps> = ({ onSubmit, isLoading }) => {
   return (
     <form className="meal-form" onSubmit={handleSubmit}>
       <div className="form-grid">
+        {/* Age */}
         <div className="form-group">
           <label htmlFor="age">Age</label>
           <input
@@ -51,12 +60,13 @@ const MealForm: React.FC<MealFormProps> = ({ onSubmit, isLoading }) => {
             value={formData.age}
             onChange={handleChange}
             required
-            min="1"
-            max="120"
+            min={1}
+            max={120}
             placeholder="Enter your age"
           />
         </div>
 
+        {/* Gender */}
         <div className="form-group">
           <label htmlFor="gender">Gender</label>
           <select
@@ -73,6 +83,7 @@ const MealForm: React.FC<MealFormProps> = ({ onSubmit, isLoading }) => {
           </select>
         </div>
 
+        {/* Diet Type */}
         <div className="form-group">
           <label htmlFor="dietType">Diet Type</label>
           <select
@@ -94,6 +105,7 @@ const MealForm: React.FC<MealFormProps> = ({ onSubmit, isLoading }) => {
           </select>
         </div>
 
+        {/* Calorie Goal */}
         <div className="form-group">
           <label htmlFor="calorieGoal">Daily Calorie Goal</label>
           <input
@@ -103,29 +115,15 @@ const MealForm: React.FC<MealFormProps> = ({ onSubmit, isLoading }) => {
             value={formData.calorieGoal}
             onChange={handleChange}
             required
-            min="1000"
-            max="5000"
+            min={1000}
+            max={5000}
             placeholder="e.g., 2000"
           />
         </div>
 
-        <div className="form-group">
-          <label htmlFor="mealsPerDay">Meals Per Day</label>
-          <select
-            id="mealsPerDay"
-            name="mealsPerDay"
-            value={formData.mealsPerDay}
-            onChange={handleChange}
-            required
-          >
-            <option value="2">2 Meals</option>
-            <option value="3">3 Meals</option>
-            <option value="4">4 Meals</option>
-            <option value="5">5 Meals</option>
-            <option value="6">6 Meals</option>
-          </select>
-        </div>
+      
 
+        {/* Number of Days */}
         <div className="form-group">
           <label htmlFor="numberOfDays">Number of Days</label>
           <select
@@ -145,6 +143,7 @@ const MealForm: React.FC<MealFormProps> = ({ onSubmit, isLoading }) => {
         </div>
       </div>
 
+      {/* Allergies */}
       <div className="form-group full-width">
         <label htmlFor="allergies">Allergies or Disliked Ingredients</label>
         <textarea
@@ -155,6 +154,51 @@ const MealForm: React.FC<MealFormProps> = ({ onSubmit, isLoading }) => {
           placeholder="e.g., peanuts, shellfish, mushrooms (optional)"
           rows={3}
         />
+      </div>
+
+      <div className="form-grid">
+        {/* Goal */}
+        <div className="form-group">
+          <label htmlFor="goal">Goal</label>
+          <select
+            id="goal"
+            name="goal"
+            value={formData.goal}
+            onChange={handleChange}
+            required
+          >
+            <option value="weight_loss">Weight Loss</option>
+            <option value="weight_gain">Weight Gain</option>
+          </select>
+        </div>
+
+        {/* Height */}
+        <div className="form-group">
+          <label htmlFor="height">Height (cm)</label>
+          <input
+            type="number"
+            id="height"
+            name="height"
+            value={formData.height}
+            onChange={handleChange}
+            required
+            placeholder="e.g., 170"
+          />
+        </div>
+
+        {/* Weight */}
+        <div className="form-group">
+          <label htmlFor="weight">Weight (kg)</label>
+          <input
+            type="number"
+            id="weight"
+            name="weight"
+            value={formData.weight}
+            onChange={handleChange}
+            required
+            placeholder="e.g., 65"
+          />
+        </div>
       </div>
 
       <button type="submit" className="submit-btn" disabled={isLoading}>

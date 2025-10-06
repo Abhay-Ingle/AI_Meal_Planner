@@ -1,23 +1,21 @@
 import express from "express";
-import fetch from "node-fetch";
 import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
+import cors from "cors";
+
 
 dotenv.config();
 
 const app = express();
-app.use(express.json());
-
-// Fix __dirname in ESM
+app.use(express.json({ limit: "5mb" })); // increase limit if needed
+app.use(cors());
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Serve React build
-app.use(express.static(path.join(__dirname, "dist")));
-
 // OpenAI API proxy route
 app.post("/api/generate", async (req, res) => {
+  console.log("Request body:", req.body);
   try {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -28,14 +26,22 @@ app.post("/api/generate", async (req, res) => {
       body: JSON.stringify(req.body),
     });
     const data = await response.json();
+    console.log(data);
+    if (!response.ok) {
+      console.error("OpenAI API error:", data);
+      return res.status(response.status).json(data);
+    }
     res.json(data);
   } catch (err) {
-    console.error(err);
+    console.error("Server error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
 
-// Catch-all route for React Router
+// Serve React build
+app.use(express.static(path.join(__dirname, "dist")));
+
+// Catch-all route for React Router (after API routes)
 app.get(/.*/, (req, res) => {
   res.sendFile(path.join(__dirname, "dist", "index.html"));
 });
