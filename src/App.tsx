@@ -8,7 +8,10 @@ import "./styles/App.css";
 interface Meal {
   name: string;
   ingredients: string[];
-  calorieGoal: number;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
   preparation: string;
 }
 
@@ -20,84 +23,62 @@ interface MealPlan {
   [day: number]: DayMeals;
 }
 
+interface MealPlanWithUser {
+  userName: string;
+  days: MealPlan;
+  calorieGoal: number;
+  macroRatio: { protein: number; carbs: number; fat: number };
+}
+
 function App() {
-  const [mealPlan, setMealPlan] = useState<MealPlan | null>(null);
+  const [mealPlan, setMealPlan] = useState<MealPlanWithUser | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Generate structured JSON prompt for OpenAI
-  // 📌 Replace your existing generatePrompt with this
-const generatePrompt = (formData: FormData): string => {
+  const generatePrompt = (formData: FormData): string => {
+    const totalCalories = Number(formData.calorieGoal);
+ const days = Number(formData.numberOfDays || 1);
+    const breakfastCalories = Math.floor(totalCalories * 0.25);
+    const lunchCalories = Math.floor(totalCalories * 0.35);
+    const dinnerCalories = Math.floor(totalCalories * 0.25);
+    const snackCalories =
+      totalCalories - (breakfastCalories + lunchCalories + dinnerCalories);
 
-const totalCalories = Number(formData.calorieGoal);
-const breakfastCalories = Math.floor(totalCalories * 0.25);
-const lunchCalories = Math.floor(totalCalories * 0.35);
-const dinnerCalories = Math.floor(totalCalories * 0.25);
-const snackCalories = totalCalories - (breakfastCalories + lunchCalories + dinnerCalories);
+    return `
+    You are a professional nutritionist.
 
-  
-  return `
-  You are an expert nutritionist and weight management coach with over 15 years of experience.
+    Create a ${days}-day diet plan for:
+    - Name: ${formData.name}
+    - Age: ${formData.age}
+    - Gender: ${formData.gender}
+    - Height: ${formData.height} cm
+    - Weight: ${formData.weight} kg
+    - City: Maharashtra (low-income)
+    - Goal: ${formData.goal}
+    - Daily Calories: ${formData.calorieGoal} kcal
+    - Meals per day: Breakfast, Lunch, Snack, Dinner
+    - Local Maharashtrian foods only.
 
-  Your task is to create a highly personalized ${formData.goal === "weight_loss" ? "weight loss" : "weight gain"} diet plan for:
-  - Gender: ${formData.gender}
-  - Age: ${formData.age}
-  - Height: ${formData.height} cm
-  - Weight: ${formData.weight} kg
-  - City: Tier 3 / 4 city in Maharashtra
-  - Diet Preference: ${formData.dietType} 
-  - Number of meals: 4 meals per day
-  - Economic status: Low income — meals should be affordable, simple, realistic and use **locally available Maharashtrian foods**. Avoid fancy or expensive ingredients.
-    Distribute total daily calories roughly as:
-- Breakfast: 25%
-- Lunch: 35%
-- Dinner: 25%
-- Snack: 15%
-  ⚠️ Important:
-   ⚠️ Important:
-1. Distribute calories as: 
-   - Breakfast: ${breakfastCalories} kcal
-   - Lunch: ${lunchCalories} kcal
-   - Dinner: ${dinnerCalories} kcal
-   - Snack: ${snackCalories} kcal
-2. Each meal's calories must **not exceed the assigned amount**, and the **total daily calories must not exceed ${formData.calorieGoal} kcal**.
-
-  - The diet plan should include only **Maharashtrian food choices** and use easy-to-follow language.
-  - Give a **4-meal plan per day** (Breakfast, Lunch, Snack, Dinner).
-  - Include **total daily calories** and **macronutrients** (protein, carbohydrates, fats).
-  - Format the output as **valid JSON only** (no markdown). 
- 
-
-  JSON structure example:
-  {
-    "1": {
-      "breakfast": {
-        "name": "Poha with peanuts",
-        "ingredients": ["poha", "peanuts", "onion", "oil"],
-        "calories": 350,
-        "protein": 10,
-        "carbs": 45,
-        "fats": 12,
-        "preparation": "Cook poha with peanuts and onions."
+    JSON structure example:
+    {
+      "1": {
+        "breakfast": { "name": "Poha", "ingredients": ["poha","peanuts"], "calories": 350, "protein": 8, "carbs": 45, "fat": 10, "preparation": "Cook poha" },
+        "lunch": {...},
+        "snack": {...},
+        "dinner": {...}
       },
-      "lunch": {...},
-      "snack": {...},
-      "dinner": {...},
-      "total_nutrients": {
-        "calories": 1800,
-        "protein": 65,
-        "carbs": 230,
-        "fats": 55
+      "2": {
+        "breakfast": {...},
+        "lunch": {...},
+        "snack": {...},
+        "dinner": {...}
       }
-    },
-    "2": { ... }
-  }
+    }
 
-  Generate for ${formData.numberOfDays} days.
-  `;
-};
+    Output valid JSON only — include exactly ${days} separate day entries (Day 1, Day 2, ...).
+    `;
+  };
 
-  // Handle form submission
   const handleFormSubmit = async (formData: FormData) => {
     setIsLoading(true);
     setError(null);
@@ -105,156 +86,174 @@ const snackCalories = totalCalories - (breakfastCalories + lunchCalories + dinne
 
     try {
       const prompt = generatePrompt(formData);
+      const response = await fetch("api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [
+            {
+              role: "system",
+              content:
+                "You are a professional nutritionist. Provide multi-day meal plans in valid JSON only.",
+            },
+            { role: "user", content: prompt },
+          ],
+          temperature: 0.7,
+        }),
+      });
 
-   const response = await fetch("api/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [
-          {
-            role: "system",
-            content: "You are a professional nutritionist. Provide meal plans in valid JSON only."
-          },
-          { role: "user", content: prompt }
-        ],
-        temperature: 0.7
-      }),
-    });
-
-
-
-      if (!response.ok) {
+      if (!response.ok)
         throw new Error(`OpenAI API error: ${response.statusText}`);
-      }
 
       const data = await response.json();
       const content = data.choices[0].message.content;
-
-      // Clean and parse JSON
-      const cleanContent = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+      const cleanContent = content
+        .replace(/```json\n?/g, "")
+        .replace(/```\n?/g, "")
+        .trim();
       const parsedPlan: MealPlan = JSON.parse(cleanContent);
 
-// Ensure all meals have required fields to prevent errors
-Object.values(parsedPlan).forEach(day => {
-  Object.keys(day).forEach(mealKey => {
-    const meal = day[mealKey];
-    if (!meal || typeof meal !== "object") {
-      day[mealKey] = { 
-        name: "Meal not provided", 
-        ingredients: [], 
-        calories: 0, 
-        preparation: "" 
-      };
-    } else {
-      if (!meal.name) meal.name = "Meal not provided";
-      if (!meal.ingredients) meal.ingredients = [];
-      if (!meal.calories && meal.calories !== 0) meal.calories = 0;
-      if (!meal.preparation) meal.preparation = "";
-    }
-  });
-});
+      Object.values(parsedPlan).forEach((day) => {
+        Object.keys(day).forEach((mealKey) => {
+          const meal = day[mealKey];
+          if (!meal || typeof meal !== "object") {
+            day[mealKey] = {
+              name: "Meal not provided",
+              ingredients: [],
+              calories: 0,
+              protein: 0,
+              carbs: 0,
+              fat: 0,
+              preparation: "",
+            };
+          }
+        });
+      });
 
-
-setMealPlan(parsedPlan);
-
+      setMealPlan({
+        userName: formData.name || "User",
+        days: parsedPlan,
+        calorieGoal: formData.calorieGoal,
+        macroRatio: { protein: 40, carbs: 35, fat: 25 },
+      });
     } catch (err) {
-      console.error(err);
-      setError(err instanceof Error ? err.message : "Error generating meal plan");
+      setError(
+        err instanceof Error ? err.message : "Error generating meal plan"
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Format meal description for display or PDF
- const formatMealDescription = (meal: Meal) => {
-  if (!meal) return "No meal data";
-
-  const ingredients = Array.isArray(meal.ingredients) ? meal.ingredients.join(", ") : "No ingredients listed";
-
-  return `${meal.name || "No name"}\nIngredients: ${ingredients}\nCalories: ${meal.calories ?? 0}\n${meal.preparation || ""}`;
-};
-
-
-  // Download PDF
+  // 🧾 PDF GENERATOR
   const downloadPDF = () => {
     if (!mealPlan) return;
 
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-
-    let y = 20;
     const margin = 15;
-    const lineHeight = 7;
+    let y = 25;
 
-    // Title
+    doc.setFont("times", "italic");
+    doc.setFontSize(11);
+    doc.text("foodvez.com", pageWidth - margin, 15, { align: "right" });
+
     doc.setFont("times", "bold");
-    doc.setFontSize(18);
-    doc.text("MY PERSONALIZED MEAL PLAN", pageWidth / 2, y, { align: "center" });
-    y += 15;
+    doc.setFontSize(20);
+    doc.text("Your Diet Plan", pageWidth / 2, y, { align: "center" });
+    y += 10;
 
-    // Loop through days
-   Object.entries(mealPlan).forEach(([day, dayMeals]) => {
-  doc.setFont("times", "bold");
-  doc.setFontSize(14);
-  doc.text(`DAY ${day}`, margin, y);
-  y += lineHeight + 2;
+    doc.setFontSize(16);
+    doc.text(`Diet Plan for ${mealPlan.userName}`, pageWidth / 2, y, {
+      align: "center",
+    });
+    y += 10;
 
-  Object.values(dayMeals)
-    .filter(meal => meal.name !== "Meal not provided") // skip empty meals
-    .forEach(meal => {
-      // Meal name
+    doc.setFont("times", "normal");
+    doc.setFontSize(12);
+    doc.text(
+      `Total Calories: ${mealPlan.calorieGoal} kcal/day`,
+      pageWidth / 2,
+      y,
+      { align: "center" }
+    );
+    y += 6;
+    doc.text(
+      `Macronutrient Ratio: Protein ${mealPlan.macroRatio.protein}%, Carbs ${mealPlan.macroRatio.carbs}%, Fat ${mealPlan.macroRatio.fat}%`,
+      pageWidth / 2,
+      y,
+      { align: "center" }
+    );
+    y += 12;
+
+    const mealOrder = [
+      { key: "breakfast", label: "Breakfast", time: "7:30–9:30 AM" },
+      { key: "lunch", label: "Lunch", time: "12:30–2:30 PM" },
+      { key: "snack", label: "Snack", time: "4:00–5:00 PM" },
+      { key: "dinner", label: "Dinner", time: "8:00–9:00 PM" },
+    ];
+
+    Object.entries(mealPlan.days).forEach(([day, meals]) => {
       doc.setFont("times", "bold");
+      doc.setFontSize(13);
+      doc.text(`Day ${day}`, pageWidth / 2, y, { align: "center" });
+      y += 8;
+
       doc.setFontSize(12);
-      doc.text(meal.name, margin + 5, y);
-      y += lineHeight;
-
-      // Ingredients
-      doc.setFont("times", "normal");
-      doc.setFontSize(11);
-      const ingredientsText = `Ingredients: ${meal.ingredients.join(", ")}`;
-      const splitIngredients = doc.splitTextToSize(ingredientsText, pageWidth - 2 * margin - 5);
-      splitIngredients.forEach(line => {
-        doc.text(line, margin + 10, y);
-        y += lineHeight;
-      });
-
-      // Calories
-      doc.text(`Calories: ${meal.calories ?? 0}`, margin + 10, y);
-      y += lineHeight;
-
-      // Preparation
-      if (meal.preparation) {
-        doc.setFont("times", "italic");
-        const prepText = `Preparation: ${meal.preparation}`;
-        const splitPrep = doc.splitTextToSize(prepText, pageWidth - 2 * margin - 5);
-        splitPrep.forEach(line => {
-          doc.text(line, margin + 10, y);
-          y += lineHeight;
-        });
-        doc.setFont("times", "normal");
-      }
-
+      doc.text("Time", margin, y);
+      doc.text("Meal Name", margin + 40, y);
+      doc.text("Meal Details", margin + 90, y);
+      y += 4;
+      doc.line(margin, y, pageWidth - margin, y);
       y += 5;
 
-      if (y > pageHeight - 25) {
-        doc.addPage();
-        y = 20;
-      }
+      doc.setFont("times", "normal");
+      doc.setFontSize(11);
+
+      mealOrder.forEach(({ key, label, time }) => {
+        const meal = meals[key];
+        if (!meal || meal.name === "Meal not provided") return;
+
+        doc.text(time, margin, y);
+        doc.text(label, margin + 40, y);
+
+        const details = `${meal.name}: ${meal.ingredients.join(", ")}${
+          meal.preparation ? " – " + meal.preparation : ""
+        }`;
+        const splitText = doc.splitTextToSize(details, pageWidth - (margin + 90));
+        splitText.forEach((line, i) => {
+          doc.text(line, margin + 90, y + i * 5);
+        });
+
+        y += Math.max(10, splitText.length * 5 + 2);
+
+        if (y > pageHeight - 25) {
+          doc.addPage();
+          doc.setFont("times", "italic");
+          doc.setFontSize(11);
+          doc.text("foodvez.com", pageWidth - margin, 15, { align: "right" });
+          y = 25;
+        }
+      });
+
+      y += 10;
     });
 
-  y += 10;
-});
+    doc.setFont("times", "bold");
+    doc.setFontSize(12);
+    doc.text("Summary:", margin, y);
+    y += 8;
+    doc.setFont("times", "normal");
+    doc.text("Hydration: Drink at least 3+ liters of water daily.", margin + 5, y);
 
-
-    // Footer
-    y = pageHeight - 15;
+    y = pageHeight - 10;
     doc.setFont("times", "italic");
     doc.setFontSize(10);
-    doc.text("Generated by AI Meal Planner", pageWidth / 2, y, { align: "center" });
+    doc.text("Generated by Foodvez.com", pageWidth / 2, y, { align: "center" });
 
-    doc.save("meal-plan.pdf");
+    doc.save(`${mealPlan.userName}_diet_plan.pdf`);
   };
 
   return (
@@ -277,14 +276,14 @@ setMealPlan(parsedPlan);
           {mealPlan && (
             <div className="meal-plan-section">
               <div className="meal-plan-header">
-                <h2>Your Meal Plan</h2>
+                <h2>{mealPlan.userName}'s Meal Plan</h2>
                 <button className="download-btn" onClick={downloadPDF}>
                   <Download size={20} /> Download Plan
                 </button>
               </div>
 
               <div className="meal-cards-grid">
-                {Object.entries(mealPlan).map(([day, meals]) => (
+                {Object.entries(mealPlan.days).map(([day, meals]) => (
                   <MealCard key={day} day={parseInt(day)} meals={meals} />
                 ))}
               </div>

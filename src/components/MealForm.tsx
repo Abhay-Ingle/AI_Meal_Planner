@@ -7,13 +7,14 @@ interface MealFormProps {
 }
 
 export interface FormData {
+  name?: string;
   age: string;
   gender: string;
   dietType: string;
   allergies: string;
-  calorieGoal: string; // ✅ should be string (input returns string)
+  calorieGoal: string; // input returns string
   mealsPerDay: string;
-  numberOfDays: string;
+  numberOfDays: string; // same key used in App.tsx
   goal: string;
   height: string;
   weight: string;
@@ -21,13 +22,14 @@ export interface FormData {
 
 const MealForm: React.FC<MealFormProps> = ({ onSubmit, isLoading }) => {
   const [formData, setFormData] = useState<FormData>({
+    name: '',
     age: '',
     gender: '',
     dietType: '',
     allergies: '',
     calorieGoal: '',
-    mealsPerDay: '4', // default to 4 meals as per your AI prompt
-    numberOfDays: '7',
+    mealsPerDay: '4', // default as per prompt
+    numberOfDays: '7', // default 7 days
     goal: 'weight_loss',
     height: '',
     weight: '',
@@ -50,6 +52,20 @@ const MealForm: React.FC<MealFormProps> = ({ onSubmit, isLoading }) => {
   return (
     <form className="meal-form" onSubmit={handleSubmit}>
       <div className="form-grid">
+        {/* Name */}
+        <div className="form-group">
+          <label htmlFor="name">Your Name</label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            value={formData.name || ""}
+            onChange={handleChange}
+            placeholder="Enter your name"
+            required
+          />
+        </div>
+
         {/* Age */}
         <div className="form-group">
           <label htmlFor="age">Age</label>
@@ -83,28 +99,6 @@ const MealForm: React.FC<MealFormProps> = ({ onSubmit, isLoading }) => {
           </select>
         </div>
 
-        {/* Diet Type */}
-        <div className="form-group">
-          <label htmlFor="dietType">Diet Type</label>
-          <select
-            id="dietType"
-            name="dietType"
-            value={formData.dietType}
-            onChange={handleChange}
-            required
-          >
-            <option value="">Select diet type</option>
-            <option value="balanced">Balanced</option>
-            <option value="vegan">Vegan</option>
-            <option value="vegetarian">Vegetarian</option>
-            <option value="keto">Keto</option>
-            <option value="paleo">Paleo</option>
-            <option value="mediterranean">Mediterranean</option>
-            <option value="low-carb">Low Carb</option>
-            <option value="high-protein">High Protein</option>
-          </select>
-        </div>
-
         {/* Calorie Goal */}
         <div className="form-group">
           <label htmlFor="calorieGoal">Daily Calorie Goal</label>
@@ -121,8 +115,6 @@ const MealForm: React.FC<MealFormProps> = ({ onSubmit, isLoading }) => {
           />
         </div>
 
-      
-
         {/* Number of Days */}
         <div className="form-group">
           <label htmlFor="numberOfDays">Number of Days</label>
@@ -134,6 +126,7 @@ const MealForm: React.FC<MealFormProps> = ({ onSubmit, isLoading }) => {
             required
           >
             <option value="1">1 Day</option>
+            <option value="2">2 Days</option>
             <option value="3">3 Days</option>
             <option value="5">5 Days</option>
             <option value="7">7 Days</option>
@@ -151,7 +144,7 @@ const MealForm: React.FC<MealFormProps> = ({ onSubmit, isLoading }) => {
           name="allergies"
           value={formData.allergies}
           onChange={handleChange}
-          placeholder="e.g., peanuts, shellfish, mushrooms (optional)"
+          placeholder="e.g., peanuts, mushrooms, shellfish (optional)"
           rows={3}
         />
       </div>
