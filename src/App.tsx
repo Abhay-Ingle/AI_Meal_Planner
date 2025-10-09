@@ -66,12 +66,16 @@ function App() {
         "breakfast": { "name": "Poha", "ingredients": ["poha","peanuts"], "calories": 350, "protein": 8, "carbs": 45, "fat": 10, "preparation": "Cook poha" },
         "lunch": {...},
         "snack": {...},
+        "pre workout": {...},
+        "post workout": {...},
         "dinner": {...}
       },
       "2": {
         "breakfast": {...},
         "lunch": {...},
         "snack": {...},
+        "pre workout": {...},
+        "post workout": {...},
         "dinner": {...}
       }
     }
@@ -193,6 +197,8 @@ function App() {
       { key: "breakfast", label: "Breakfast", time: "7:30–9:30 AM" },
       { key: "lunch", label: "Lunch", time: "12:30–2:30 PM" },
       { key: "snack", label: "Snack", time: "4:00–5:00 PM" },
+      { key: "pre workout", label: "pre workout", time: "4:00–5:00 PM" },
+      { key: "post workout", label: "post workout", time: "6:00–7:00 PM" },
       { key: "dinner", label: "Dinner", time: "8:00–9:00 PM" },
     ];
 
@@ -297,5 +303,6 @@ function App() {
 }
 
 export default App;
+
 
 
