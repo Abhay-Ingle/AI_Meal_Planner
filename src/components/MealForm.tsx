@@ -11,7 +11,7 @@ export interface FormData {
   age: string;
   gender: string;
   dietType: string;
-  allergies: string;
+  note: string;
   calorieGoal: string; // input returns string
   mealsPerDay: string;
   numberOfDays: string; // same key used in App.tsx
@@ -26,7 +26,7 @@ const MealForm: React.FC<MealFormProps> = ({ onSubmit, isLoading }) => {
     age: '',
     gender: '',
     dietType: '',
-    allergies: '',
+    note: '',
     calorieGoal: '',
     mealsPerDay: '4', // default as per prompt
     numberOfDays: '7', // default 7 days
@@ -138,13 +138,13 @@ const MealForm: React.FC<MealFormProps> = ({ onSubmit, isLoading }) => {
 
       {/* Allergies */}
       <div className="form-group full-width">
-        <label htmlFor="allergies">Allergies or Disliked Ingredients</label>
+        <label htmlFor="note">Allergies or note Ingredients</label>
         <textarea
-          id="allergies"
-          name="allergies"
-          value={formData.allergies}
+          id="note"
+          name="note"
+          value={formData.note}
           onChange={handleChange}
-          placeholder="e.g., peanuts, mushrooms, shellfish (optional)"
+          placeholder="He/she want veg diet only.....(optional)"
           rows={3}
         />
       </div>
