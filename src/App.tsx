@@ -56,7 +56,8 @@ function App() {
     - City: Maharashtra (low-income)
     - Goal: ${formData.goal}
     - Daily Calories: ${formData.calorieGoal} kcal
-    - Meals per day: Breakfast, Lunch, Snack, Dinner
+    - Important Note: ${formData.note}
+    - Meals per day: Breakfast, Lunch, Pre workout, Postworkout, Dinner
     - Make a proper personalised diet plan according to the height weight and age which will give the real results . Make the diet considering a he/she living in tier 3 and 4 city from maharashtra ,diet should be according to Maharashtrian meals and food choices and it should have only 4 meals per day, he/she is economically not good so give the plan which will be relevant , easy to understand and follow, should afford following the diet, no fancy meals.
 
     JSON structure example:
@@ -296,4 +297,5 @@ function App() {
 }
 
 export default App;
+
 
