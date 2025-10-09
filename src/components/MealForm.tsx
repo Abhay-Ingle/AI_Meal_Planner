@@ -161,7 +161,7 @@ const MealForm: React.FC<MealFormProps> = ({ onSubmit, isLoading }) => {
             required
           >
             <option value="weight_loss">Weight Loss</option>
-             <option value="muscle gain">Weight Gain</option>
+            <option value="muscle gain">Weight Gain</option>
             <option value="weight_gain">Weight Gain</option>
           </select>
         </div>
