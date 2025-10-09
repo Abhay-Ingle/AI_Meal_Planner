@@ -18,7 +18,7 @@ interface MealCardProps {
 }
 
 const MealCard: React.FC<MealCardProps> = ({ day, meals }) => {
-  const mealNames = ['Breakfast', 'Lunch','pre workout','post workout' 'Dinner'];
+  const mealNames = ['Breakfast', 'Lunch','pre workout','post workout','Dinner'];
 
   const filledMeals: Meal[] = mealNames.map((_, index) => {
     const key = Object.keys(meals)[index];
