@@ -8,6 +8,14 @@ import cors from "cors";
 dotenv.config();
 
 const app = express();
+// ✅ Allow requests from your frontend domain
+app.use(cors({
+  origin: ["https://diet.foodvez.com"],  // allow your live frontend
+  methods: ["GET", "POST"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
+
 app.use(express.json({ limit: "5mb" })); // increase limit if needed
 app.use(cors());
 const __filename = fileURLToPath(import.meta.url);
@@ -48,3 +56,4 @@ app.get(/.*/, (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
